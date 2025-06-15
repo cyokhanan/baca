@@ -1,4 +1,4 @@
-# 📚 Digital Library Management System
+# 📚 BACA - Digital Library Management System
 
 A comprehensive web-based library management system built using **Laravel** and **MySQL**, designed to streamline the operations of modern libraries. This system supports core library functionalities such as book management, borrowing and returning processes, damage handling, copy tracking, top-ups, and more.
 
@@ -52,13 +52,32 @@ Relational integrity is enforced through foreign key constraints to ensure data 
 ## 📦 Getting Started
 
 1. Clone the repository  
-   `git clone https://github.com/your-username/your-repo-name.git`
+   ```bash
+   git clone https://github.com/your-username/your-repo-name.git
 
-2. Install dependencies  
-   `composer install`
+2. **Install dependencies**  
+   ```bash
+   composer install
 
-3. Configure `.env` for your database connection
+3. **Copy the .env example file and configure database**  
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
 
-4. Run migrations and seed the database  
+4. **Run migrations and seed the database**  
    ```bash
    php artisan migrate:fresh --seed
+
+5. **Start the development server**  
+   ```bash
+   php artisan serve
+
+## 🔒 Default Admin Access
+
+Email    : admin@perpus.local  
+Password : admin123
+
+## 📌 License
+This project is open-sourced and available for educational or non-commercial use.
+
+Created with ❤️ by BACA TEAM
