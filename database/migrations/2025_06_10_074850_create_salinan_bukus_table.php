@@ -6,20 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('salinan_bukus', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('id_buku')->constrained('bukus')->onDelete('cascade');
+            $table->string('kode_salinan', 10)->unique();
+            $table->enum('status', ['tersedia','dipinjam','dibooking'])->default('tersedia');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('salinan_bukus');

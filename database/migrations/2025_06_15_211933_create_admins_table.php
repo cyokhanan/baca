@@ -8,17 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('topups', function (Blueprint $table) {
+        Schema::create('admins', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_peminjam')->constrained('peminjams')->onDelete('cascade');
-            $table->decimal('jumlah', 10, 2);
-            $table->dateTime('tanggal');
+            $table->string('nama', 100);
+            $table->string('email', 100)->unique();
+            $table->string('password', 255);
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('topups');
+        Schema::dropIfExists('admins');
     }
 };
