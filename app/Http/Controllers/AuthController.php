@@ -79,7 +79,7 @@ class AuthController extends Controller
                 'peminjam_id'   => $user->id,
                 'peminjam_nama' => $user->nama
             ]);
-            return redirect()->route('pinjam.index');
+            return redirect()->route('buku.index');
         }
         return back()->withErrors(['login' => 'Email atau password salah.']);
     }
@@ -97,7 +97,7 @@ class AuthController extends Controller
                 'peminjam_id'   => $row->new_id,
                 'peminjam_nama' => $r->nama
             ]);
-            return redirect()->route('pinjam.index');
+            return redirect()->route('login.index');
         } catch (\Exception $e) {
             return back()->withErrors(['register' => $e->getMessage()]);
         }

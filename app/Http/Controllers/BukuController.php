@@ -12,15 +12,21 @@ class BukuController extends Controller
      */
     public function index()
     {
-        //
+        $bukus = Buku::with(['kategori','penulis','salinanTersedia'])->get();
+        return view('dashboard.index', compact('bukus'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Buku $buku)
     {
-        //
+        $salinan = $buku->salinanTersedia()->first();
+        if (!$salinan) {
+            return back()->with('error', 'Tidak ada salinan tersedia.');
+        }
+
+        return view('pinjam.create', compact('buku', 'salinan'));
     }
 
     /**

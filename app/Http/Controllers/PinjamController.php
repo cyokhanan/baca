@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pinjam;
+use App\Models\Peminjam;
+use App\Models\Buku;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -53,24 +55,68 @@ class PinjamController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Buku $buku)
     {
-        $peminjams = DB::table('peminjams')->select('id','nama')->get();
-        $bukus     = DB::table('bukus')->select('id','judul')->get();
-        return view('pinjam.create', compact('peminjams','bukus'));
+        $salinan = $buku->salinanTersedia()->first();
+
+        if (!$salinan) {
+            return back()->with('error', 'Tidak ada salinan tersedia.');
+        }
+
+        $peminjamId = session('peminjam_id');
+
+        if (!$peminjamId) {
+            return redirect()->route('login')->withErrors(['login' => 'Silakan login terlebih dahulu.']);
+        }
+
+        // Ambil data peminjam dari database
+        $peminjam = DB::table('peminjams')->find($peminjamId);
+
+        if (!$peminjam) {
+            return redirect()->route('login')->withErrors(['login' => 'Peminjam tidak ditemukan.']);
+        }
+
+        return view('pinjam.create', compact('buku', 'salinan', 'peminjam'));
     }
+
+
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        //
+        try {
+            DB::statement('CALL pinjam_buku(?, ?, ?, ?)', [
+                $request->id_salinan,
+                session('peminjam_id'),
+                $request->tanggal_pinjam,
+                $request->tanggal_kembali,
+            ]);
+
+            return redirect()->route('dashboard.index')->with('success', 'Peminjaman berhasil.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal meminjam buku: ' . $e->getMessage());
+        }
     }
 
     /**
      * Display the specified resource.
      */
+    public function riwayat()
+    {
+        $peminjamId = session('peminjam_id'); 
+
+        $pinjaman = DB::table('pinjams')
+            ->join('salinan_bukus', 'pinjams.id_salinan', '=', 'salinan_bukus.id')
+            ->join('bukus', 'salinan_bukus.id_buku', '=', 'bukus.id')
+            ->select('pinjams.*', 'bukus.judul', 'salinan_bukus.kode_salinan')
+            ->where('pinjams.id_peminjam', $peminjamId)
+            ->whereNull('pinjams.tanggal_kembali')
+            ->get();
+
+        return view('pinjam.riwayat', compact('pinjaman'));
+    }
     public function show(Pinjam $pinjam)
     {
         //

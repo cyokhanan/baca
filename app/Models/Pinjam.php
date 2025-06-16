@@ -7,5 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pinjam extends Model
 {
-    use HasFactory;
+    protected $table = 'peminjams';
+    protected $fillable = ['nama', 'email', 'telepon', 'alamat', 'deposit'];
 }

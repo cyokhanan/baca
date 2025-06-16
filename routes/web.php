@@ -25,10 +25,16 @@ use App\Http\Controllers\AuthController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [AuthController::class,'showLogin'   ])->name('login');
+Route::get('/dashboard', [BukuController::class, 'index'])->name('dashboard.index');
+Route::get('/akun', function () {
+    if (!session()->has('peminjam_id')) {
+        return redirect()->route('login');
+    }
 
+    $peminjam = \App\Models\Peminjam::find(session('peminjam_id'));
+    return view('akun.index', compact('peminjam'));
+})->name('akun.index');
 // buku
 Route::resource('buku', BukuController::class);
 Route::resource('penulis', PenulisController::class);
@@ -43,6 +49,8 @@ Route::resource('topup', TopupController::class);
 // peminjaman
 Route::resource('pinjam', PinjamController::class);
 Route::resource('kerusakan', KerusakanController::class);
+Route::get('/riwayat', [PinjamController::class, 'riwayat'])->name('pinjam.riwayat');
+
 
 // booking
 Route::resource('booking', BookingController::class);
@@ -50,7 +58,8 @@ Route::resource('daftar-tunggu', DaftarTungguController::class);
 
 // halaman daftar + aksi SP
 Route::get('pinjam', [PinjamController::class, 'index'])->name('pinjam.index');
-Route::post('pinjam', [PinjamController::class, 'prosesPeminjaman'])->name('pinjam.store');
+Route::get('/pinjam/create/{buku}', [PinjamController::class, 'create'])->name('pinjam.create');
+Route::post('/pinjam', [PinjamController::class, 'store'])->name('pinjam.store');
 Route::get('/pinjam/pengembalian/{id}',      [PinjamController::class, 'prosesPengembalian'])->name('pinjam.kembali');
 Route::get('/pinjam/booking-ke-pinjam/{id}', [PinjamController::class, 'bookingKePinjam'])->name('pinjam.bookingke');
 Route::post('/pinjam/proses-peminjaman',      [PinjamController::class, 'prosesPeminjaman'])->name('pinjam.proses');

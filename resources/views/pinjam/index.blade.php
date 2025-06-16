@@ -2,10 +2,8 @@
 
 @section('content')
     <h2>Form Peminjaman</h2>
-
     @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
     @if(session('error')) <div class="alert alert-danger">{{ session('error') }}</div> @endif
-
     @if(session()->has('peminjam_id'))
         <form action="{{ route('pinjam.store') }}" method="POST">
             @csrf
