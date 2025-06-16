@@ -12,6 +12,7 @@ use App\Http\Controllers\PinjamController;
 use App\Http\Controllers\KerusakanController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DaftarTungguController;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,3 +47,22 @@ Route::resource('kerusakan', KerusakanController::class);
 // booking
 Route::resource('booking', BookingController::class);
 Route::resource('daftar-tunggu', DaftarTungguController::class);
+
+// halaman daftar + aksi SP
+Route::get('pinjam', [PinjamController::class, 'index'])->name('pinjam.index');
+Route::post('pinjam', [PinjamController::class, 'prosesPeminjaman'])->name('pinjam.store');
+Route::get('/pinjam/pengembalian/{id}',      [PinjamController::class, 'prosesPengembalian'])->name('pinjam.kembali');
+Route::get('/pinjam/booking-ke-pinjam/{id}', [PinjamController::class, 'bookingKePinjam'])->name('pinjam.bookingke');
+Route::post('/pinjam/proses-peminjaman',      [PinjamController::class, 'prosesPeminjaman'])->name('pinjam.proses');
+
+// auth
+Route::get('/login'   , [AuthController::class,'showLogin'   ])->name('login');
+Route::post('/login'   , [AuthController::class,'login'       ])->name('login.post');
+Route::get ('/register', [AuthController::class,'showRegister'])->name('register');
+Route::post('/register', [AuthController::class,'register'    ])->name('register.post');
+Route::post('/logout'  , [AuthController::class,'logout'      ])->name('logout');
+
+// middleware cek login peminjam
+Route::middleware('ceklogin')->group(function () {
+    Route::post('/pinjam', [PinjamController::class, 'store'])->name('pinjam.store');
+});
