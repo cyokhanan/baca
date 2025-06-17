@@ -18,6 +18,19 @@
 <body>
     <div class="card shadow-sm p-4" style="width: 100%; max-width: 420px;">
         <h5 class="mb-3 text-center">Selamat Datang Di Aplikasi Baca</h5>
+
+        <div class="mb-3">
+            <strong>Daftar Akun:</strong>
+            <ul class="mb-2">
+                <li>felix.tanu@gmail.com</li>
+                <li>livia.gunawan@gmail.com</li>
+                <li>kevinhartanto88@gmail.com (blacklist)</li>
+                <li>melindawijaya21@gmail.com</li>
+                <li>jonathanlie77@gmail.com</li>
+            </ul>
+            <p><strong>Password semua akun:</strong> <code>password</code></p>
+        </div>
+
         <form method="POST" action="{{ route('login.post') }}">
             @csrf
 

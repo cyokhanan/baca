@@ -19,7 +19,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#">BACA</a>
+            <a class="navbar-brand fw-bold" href="{{ route('dashboard.index') }}">BACA</a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -29,13 +29,13 @@
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('dashboard.index') }}">Dashboard</a>
+                        <a class="nav-link" href="{{ route('dashboard.index') }}">Buku</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('pinjam.riwayat') }}">Riwayat</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('peminjam.index') }}">Pengembalian</a>
+                        <a class="nav-link" href="{{ route('deposit.index') }}">Deposit</a>
                     </li>
                     @if(session()->has('peminjam_id'))
                         <li class="nav-item dropdown">

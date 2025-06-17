@@ -13,65 +13,47 @@ use App\Http\Controllers\KerusakanController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DaftarTungguController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DepositController;
+use App\Http\Controllers\Admin\AuthAdminController;
+use App\Http\Controllers\Admin\PengembalianController as AdminPengembalian;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+// Auth
+Route::get('/', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/', [AuthController::class,'showLogin'   ])->name('login');
-Route::get('/dashboard', [BukuController::class, 'index'])->name('dashboard.index');
-Route::get('/akun', function () {
-    if (!session()->has('peminjam_id')) {
-        return redirect()->route('login');
-    }
-
-    $peminjam = \App\Models\Peminjam::find(session('peminjam_id'));
-    return view('akun.index', compact('peminjam'));
-})->name('akun.index');
-// buku
-Route::resource('buku', BukuController::class);
-Route::resource('penulis', PenulisController::class);
-Route::resource('kategori', KategoriController::class);
-Route::resource('tim-penulis', TimPenulisController::class);
-Route::resource('salinan-buku', SalinanBukuController::class);
-
-// topup
-Route::resource('peminjam', PeminjamController::class);
-Route::resource('topup', TopupController::class);
-
-// peminjaman
-Route::resource('pinjam', PinjamController::class);
-Route::resource('kerusakan', KerusakanController::class);
-Route::get('/riwayat', [PinjamController::class, 'riwayat'])->name('pinjam.riwayat');
-
-
-// booking
-Route::resource('booking', BookingController::class);
-Route::resource('daftar-tunggu', DaftarTungguController::class);
-
-// halaman daftar + aksi SP
-Route::get('pinjam', [PinjamController::class, 'index'])->name('pinjam.index');
-Route::get('/pinjam/create/{buku}', [PinjamController::class, 'create'])->name('pinjam.create');
-Route::post('/pinjam', [PinjamController::class, 'store'])->name('pinjam.store');
-Route::get('/pinjam/pengembalian/{id}',      [PinjamController::class, 'prosesPengembalian'])->name('pinjam.kembali');
-Route::get('/pinjam/booking-ke-pinjam/{id}', [PinjamController::class, 'bookingKePinjam'])->name('pinjam.bookingke');
-Route::post('/pinjam/proses-peminjaman',      [PinjamController::class, 'prosesPeminjaman'])->name('pinjam.proses');
-
-// auth
-Route::get('/login'   , [AuthController::class,'showLogin'   ])->name('login');
-Route::post('/login'   , [AuthController::class,'login'       ])->name('login.post');
-Route::get ('/register', [AuthController::class,'showRegister'])->name('register');
-Route::post('/register', [AuthController::class,'register'    ])->name('register.post');
-Route::post('/logout'  , [AuthController::class,'logout'      ])->name('logout');
-
-// middleware cek login peminjam
+// Peminjam
 Route::middleware('ceklogin')->group(function () {
+    Route::get('/dashboard', [BukuController::class, 'index'])->name('dashboard.index');
+
+    Route::get('/akun', function () {
+        $peminjam = \App\Models\Peminjam::find(session('peminjam_id'));
+        return view('akun.index', compact('peminjam'));
+    })->name('akun.index');
+
+    Route::resource('buku', BukuController::class);
+    Route::resource('penulis', PenulisController::class);
+    Route::resource('kategori', KategoriController::class);
+    Route::resource('tim-penulis', TimPenulisController::class);
+    Route::resource('salinan-buku', SalinanBukuController::class);
+    Route::resource('peminjam', PeminjamController::class);
+    Route::resource('topup', TopupController::class);
+
+    Route::get('/pinjam', [PinjamController::class, 'index'])->name('pinjam.index');
+    Route::get('/pinjam/create/{buku}', [PinjamController::class, 'create'])->name('pinjam.create');
     Route::post('/pinjam', [PinjamController::class, 'store'])->name('pinjam.store');
+    Route::get('/riwayat', [PinjamController::class, 'riwayat'])->name('pinjam.riwayat');
+    Route::post('/pinjam/kembali/{id}', [PinjamController::class, 'prosesPengembalian'])
+        ->name('pinjam.kembali')
+        ->middleware('ceklogin');
+
+    Route::resource('kerusakan', KerusakanController::class);
+    Route::resource('booking', BookingController::class);
+    Route::resource('daftar-tunggu', DaftarTungguController::class);
+
+    Route::get('/deposit', [DepositController::class, 'index'])->name('deposit.index');
+    Route::post('/deposit', [DepositController::class, 'store'])->name('deposit.store');
 });

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('password', 255)->charset('utf8mb4')->collation('utf8mb4_unicode_ci');
             $table->decimal('deposit', 10, 2)->default(0);
             $table->boolean('status_blacklist')->default(false);
+            $table->date('blacklist_until')->nullable();
             $table->timestamps();
         });
     }

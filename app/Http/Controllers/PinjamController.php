@@ -8,6 +8,7 @@ use App\Models\Buku;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\SalinanBuku;
 
 class PinjamController extends Controller
 {
@@ -16,31 +17,26 @@ class PinjamController extends Controller
      */
     public function index()
     {
+        // daftar pinjaman aktif
         $pinjams = DB::table('pinjams')
-            ->join('peminjams',     'pinjams.id_peminjam', '=', 'peminjams.id')
-            ->join('salinan_bukus', 'pinjams.id_salinan',  '=', 'salinan_bukus.id')
-            ->join('bukus',         'salinan_bukus.id_buku','=', 'bukus.id')
-            ->select(
-                'pinjams.*',
-                'peminjams.nama  AS peminjam',
-                'bukus.judul'
-            )
+            ->join('peminjams', 'pinjams.id_peminjam', '=', 'peminjams.id')
+            ->join('salinan_bukus', 'pinjams.id_salinan', '=', 'salinan_bukus.id')
+            ->join('bukus', 'salinan_bukus.id_buku', '=', 'bukus.id')
+            ->select('pinjams.*', 'peminjams.nama as peminjam', 'bukus.judul')
             ->whereNull('pinjams.tanggal_kembali')
             ->orderByDesc('pinjams.id')
             ->get();
 
+        // daftar booking yang menunggu salinan
         $bookings = DB::table('bookings')
             ->join('peminjams', 'bookings.id_peminjam', '=', 'peminjams.id')
-            ->join('bukus',     'bookings.id_buku',     '=', 'bukus.id')
-            ->select(
-                'bookings.*',
-                'peminjams.nama AS peminjam',
-                'bukus.judul'
-            )
+            ->join('bukus', 'bookings.id_buku', '=', 'bukus.id')
+            ->select('bookings.*', 'peminjams.nama as peminjam', 'bukus.judul')
             ->where('bookings.status', 'menunggu')
             ->orderByDesc('bookings.id')
             ->get();
 
+        // daftar buku yang masih punya salinan tersedia
         $bukus = DB::table('bukus')
             ->join('salinan_bukus', 'bukus.id', '=', 'salinan_bukus.id_buku')
             ->where('salinan_bukus.status', 'tersedia')
@@ -58,28 +54,18 @@ class PinjamController extends Controller
     public function create(Buku $buku)
     {
         $salinan = $buku->salinanTersedia()->first();
-
         if (!$salinan) {
             return back()->with('error', 'Tidak ada salinan tersedia.');
         }
 
         $peminjamId = session('peminjam_id');
-
         if (!$peminjamId) {
             return redirect()->route('login')->withErrors(['login' => 'Silakan login terlebih dahulu.']);
         }
 
-        // Ambil data peminjam dari database
         $peminjam = DB::table('peminjams')->find($peminjamId);
-
-        if (!$peminjam) {
-            return redirect()->route('login')->withErrors(['login' => 'Peminjam tidak ditemukan.']);
-        }
-
         return view('pinjam.create', compact('buku', 'salinan', 'peminjam'));
     }
-
-
 
     /**
      * Store a newly created resource in storage.
@@ -103,20 +89,6 @@ class PinjamController extends Controller
     /**
      * Display the specified resource.
      */
-    public function riwayat()
-    {
-        $peminjamId = session('peminjam_id'); 
-
-        $pinjaman = DB::table('pinjams')
-            ->join('salinan_bukus', 'pinjams.id_salinan', '=', 'salinan_bukus.id')
-            ->join('bukus', 'salinan_bukus.id_buku', '=', 'bukus.id')
-            ->select('pinjams.*', 'bukus.judul', 'salinan_bukus.kode_salinan')
-            ->where('pinjams.id_peminjam', $peminjamId)
-            ->whereNull('pinjams.tanggal_kembali')
-            ->get();
-
-        return view('pinjam.riwayat', compact('pinjaman'));
-    }
     public function show(Pinjam $pinjam)
     {
         //
@@ -146,34 +118,92 @@ class PinjamController extends Controller
         //
     }
 
-    public function prosesPeminjaman(Request $request)
+    public function riwayat()
     {
-        if (!session()->has('peminjam_id')) {
-            return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu untuk meminjam.');
+        $peminjamId = session('peminjam_id');
+        if (!$peminjamId) {
+            return redirect()->route('login')->withErrors(['login' => 'Silakan login terlebih dahulu.']);
         }
 
-        $idPeminjam = session('peminjam_id');
-        $idBuku = $request->input('id_buku');
-        $tanggalPinjam = Carbon::now()->toDateString();
+        $pinjaman = DB::table('pinjams')
+            ->join('salinan_bukus', 'pinjams.id_salinan', '=', 'salinan_bukus.id')
+            ->join('bukus', 'salinan_bukus.id_buku', '=', 'bukus.id')
+            ->where('pinjams.id_peminjam', $peminjamId)
+            ->select(
+                'pinjams.*',
+                'salinan_bukus.kode_salinan',
+                'bukus.judul'
+            )
+            ->orderByDesc('tanggal_pinjam')
+            ->get();
 
+        return view('pinjam.riwayat', compact('pinjaman'));
+    }
+
+    public function prosesPengembalian(Request $request, $id)
+    {
+        $peminjamId = session('peminjam_id');
+
+        // hanya boleh memproses pinjam miliknya & status masih aktif
+        $pinjam = DB::table('pinjams')
+            ->where('id', $id)
+            ->where('id_peminjam', $peminjamId)
+            ->whereNull('tanggal_kembali')
+            ->first();
+
+        if (!$pinjam) {
+            return redirect()->route('pinjam.riwayat')
+                ->with('error', 'Data peminjaman tidak valid.');
+        }
+
+        DB::beginTransaction();
         try {
-            DB::statement("CALL spProsesPeminjaman(?, ?, ?)", [$idPeminjam, $idBuku, $tanggalPinjam]);
-            return redirect()->back()->with('success', 'Peminjaman berhasil diproses.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal memproses peminjaman: ' . $e->getMessage());
+            DB::statement("CALL spProsesPengembalian(?, ?)", [$id, Carbon::now()]);
+
+            $damageFee = (int) $request->input('denda_kerusakan', 0);
+            if ($damageFee > 0) {
+                DB::table('pinjams')->where('id', $id)
+                ->increment('denda_kerusakan', $damageFee);
+
+                DB::table('peminjams')->where('id', $peminjamId)
+                ->decrement('deposit', $damageFee);
+            }
+
+            DB::commit();
+            return redirect()->route('pinjam.riwayat')
+                ->with('success', 'Pengembalian berhasil diproses.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal: '.$e->getMessage());
         }
     }
 
 
-    public function prosesPengembalian($idPinjam)
+    public function kembalikan($id)
     {
-        DB::statement("CALL spProsesPengembalian(?, ?)", [$idPinjam, Carbon::now()]);
-        return redirect()->back()->with('success', 'Pengembalian berhasil diproses.');
+        $pinjam = Pinjam::findOrFail($id);
+
+        if ($pinjam->status !== 'dipinjam' && $pinjam->status !== 'terlambat') {
+            return redirect()->back()->with('info', 'Buku sudah dikembalikan.');
+        }
+
+        $pinjam->tanggal_kembali = Carbon::now();
+
+        if (Carbon::parse($pinjam->tanggal_kembali)->gt(Carbon::parse($pinjam->tanggal_jatuh_tempo))) {
+            $pinjam->status = 'terlambat';
+        } else {
+            $pinjam->status = 'dikembalikan';
+        }
+
+        $pinjam->save();
+
+        $pinjam->salinan->update(['status' => 'tersedia']);
+
+        return redirect()->back()->with('success', 'Buku berhasil dikembalikan.');
     }
 
-    public function bookingKePinjam($idBooking)
+    public function salinan()
     {
-        DB::statement("CALL spBookingKePinjam(?)", [$idBooking]);
-        return redirect()->back()->with('success', 'Booking berhasil dikonversi ke peminjaman.');
+        return $this->belongsTo(SalinanBuku::class, 'id_salinan');
     }
 }

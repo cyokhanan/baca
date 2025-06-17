@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('id_salinan')->constrained('salinan_bukus')->onDelete('cascade');
             $table->date('tanggal_pinjam');
             $table->date('tanggal_jatuh_tempo');
+            $table->enum('status', ['dipinjam','dikembalikan','terlambat'])->default('dipinjam');
             $table->date('tanggal_kembali')->nullable();
             $table->decimal('denda_kerusakan', 10, 2)->default(0);
             $table->timestamps();
