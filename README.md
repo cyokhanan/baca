@@ -28,9 +28,6 @@ A comprehensive web-based library management system built using **Laravel** and 
 - 📅 **Booking & Waiting List**  
   Allow users to book books and join a waiting list if a title is unavailable.
 
-- 🔐 **Admin Panel**  
-  Manage users, books, transactions, and more from a secure admin interface.
-
 ## 🛠️ Tech Stack
 
 - **Backend Framework**: Laravel 10+
@@ -45,7 +42,7 @@ The system uses a normalized relational schema consisting of the following core 
 
 - `penulis`, `kategoris`, `bukus`, `tim_penulis`, `salinan_bukus`
 - `peminjams`, `topups`, `pinjams`, `kerusakans`, `bookings`, `daftar_tunggus`
-- `admins`, `users`, `personal_access_tokens`, `password_reset_tokens`, `failed_jobs`
+- `users`, `personal_access_tokens`, `password_reset_tokens`, `failed_jobs`
 
 Relational integrity is enforced through foreign key constraints to ensure data consistency.
 
@@ -71,11 +68,6 @@ Relational integrity is enforced through foreign key constraints to ensure data 
 5. **Start the development server**  
    ```bash
    php artisan serve
-
-## 🔒 Default Admin Access
-
-Email    : admin@perpus.local  
-Password : admin123
 
 ## 📌 License
 This project is open-sourced and available for educational or non-commercial use.
